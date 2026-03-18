@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Naija Scrabble 🇳🇬</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── THEME ── */
+:root{
+  --bg1:#0d0221;--bg2:#1a0533;--bg3:#0a1628;
+  --gold:#FFD700;--gold2:#ffb300;--orange:#ff6b35;
+  --green:#00e676;--green2:#00c853;
+  --purple:#7c4dff;--purple2:#651fff;
+  --pink:#ff4081;--cyan:#00bcd4;
+  --tile1:#fff8e1;--tile2:#ffe082;--tile3:#ffd54f;
+  --panel:rgba(255,255,255,.05);--panelborder:rgba(255,255,255,.1);
+  --text:#f0f0ff;--textsub:#a0a0c0;
+}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ══════════════════════════════
+   WELCOME SCREEN
+══════════════════════════════ */
+#welcome{
+  align-items:center;justify-content:center;padding:28px 20px 40px;
+  background:linear-gradient(160deg,#0d0221 0%,#1a0533 40%,#0a1628 100%);
+  position:relative;overflow:hidden;
+}
+#welcome::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 20%,rgba(124,77,255,.2) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 80%,rgba(0,188,212,.15) 0%,transparent 60%);
+}
+.w-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;}
+.flag-glow{font-size:5rem;filter:drop-shadow(0 0 20px rgba(0,230,118,.5));animation:float 3s ease-in-out infinite;}
+.game-title{font-size:3rem;font-weight:900;margin-top:8px;
+  background:linear-gradient(135deg,#FFD700 0%,#ff6b35 50%,#ff4081 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;line-height:1;letter-spacing:-.02em;}
+.game-sub{font-size:.8rem;color:var(--textsub);letter-spacing:.2em;text-transform:uppercase;margin-top:6px;text-align:center;}
+.tagline{font-size:.9rem;color:rgba(255,255,255,.5);font-style:italic;margin:10px 0 30px;text-align:center;}
+
+/* Difficulty */
+.diff-label{font-size:.7rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px;}
+.diff-row{display:flex;gap:10px;justify-content:center;width:100%;max-width:360px;margin-bottom:28px;}
+.dc{flex:1;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 8px;cursor:pointer;text-align:center;transition:all .25s;backdrop-filter:blur(10px);}
+.dc:active,.dc.sel{border-color:var(--gold);background:rgba(255,215,0,.1);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,215,0,.2);}
+.dc .di{font-size:2rem;}
+.dc .dn{font-size:.82rem;font-weight:700;color:var(--gold);margin-top:5px;}
+.dc .dd{font-size:.65rem;color:var(--textsub);margin-top:2px;}
+
+/* Start button */
+.start-btn{
+  background:linear-gradient(135deg,#FFD700,#ff6b35,#ff4081);
+  color:#fff;border:none;border-radius:50px;padding:16px 52px;
+  font-size:1.1rem;font-weight:800;cursor:pointer;font-family:'Poppins',sans-serif;
+  box-shadow:0 4px 30px rgba(255,107,53,.4);letter-spacing:.03em;
+  transition:all .2s;
+}
+.start-btn:active{transform:scale(.97);}
+
+/* Word tags */
+.wtags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:22px;max-width:380px;}
+.wtag{padding:4px 12px;border-radius:20px;font-size:.7rem;font-weight:600;border:1px solid;}
+.wtag.naija{background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.3);color:#00e676;}
+.wtag.english{background:rgba(0,188,212,.1);border-color:rgba(0,188,212,.3);color:#00bcd4;}
+
+/* ══════════════════════════════
+   GAME SCREEN
+══════════════════════════════ */
+#game{background:linear-gradient(160deg,#0d0221,#1a0533,#0a1628);}
+
+/* Top bar */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:50;
+}
+.tb-logo{font-size:.95rem;font-weight:900;
+  background:linear-gradient(135deg,#FFD700,#ff6b35);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.scores{display:flex;gap:8px;}
+.sbox{
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:5px 14px;text-align:center;min-width:72px;
+  backdrop-filter:blur(10px);transition:all .3s;
+}
+.sbox.active{border-color:var(--gold);background:rgba(255,215,0,.1);box-shadow:0 0 14px rgba(255,215,0,.25);}
+.sbox .sl{font-size:.58rem;text-transform:uppercase;color:var(--textsub);letter-spacing:.08em;}
+.sbox .sv{font-size:1.15rem;font-weight:800;color:var(--gold);}
+.bagpill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 11px;font-size:.68rem;color:var(--textsub);}
+.bagpill b{color:var(--gold);}
+
+/* Board */
+.board-wrap{padding:8px 6px 4px;display:flex;flex-direction:column;align-items:center;}
+.board{
+  display:grid;grid-template-columns:repeat(15,1fr);gap:1.5px;
+  background:rgba(255,255,255,.05);padding:5px;
+  border-radius:12px;border:1.5px solid rgba(255,255,255,.1);
+  width:100%;max-width:480px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.cell{width:100%;aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.37rem;font-weight:700;cursor:pointer;position:relative;text-transform:uppercase;transition:filter .15s;}
+.cell.empty{background:rgba(255,255,255,.04);color:transparent;}
+.cell.tw{background:linear-gradient(135deg,#c62828,#e53935);color:#fff;}
+.cell.dw{background:linear-gradient(135deg,#e91e63,#f06292);color:#fff;}
+.cell.tl{background:linear-gradient(135deg,#1565c0,#1e88e5);color:#fff;}
+.cell.dl{background:linear-gradient(135deg,#0097a7,#00bcd4);color:#fff;}
+.cell.star{background:linear-gradient(135deg,#f57f17,#fdd835);color:#fff;font-size:.65rem;}
+.cell:not(.has-tile):hover{filter:brightness(1.4);}
+.cell.hi{box-shadow:inset 0 0 0 2px var(--gold);filter:brightness(1.3);}
+
+/* Tile on board */
+.cell .bt{
+  width:100%;height:100%;border-radius:3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#fff8e1,#ffe082);
+  border:1px solid #ffd54f;
+  box-shadow:1px 2px 4px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.6);
+}
+.cell .bt .bl{font-size:.78rem;font-weight:800;color:#1a1000;line-height:1;}
+.cell .bt .bv{font-size:.36rem;font-weight:700;color:#6d4c00;position:absolute;bottom:1px;right:2px;}
+.cell.placed .bt{background:linear-gradient(145deg,#fff9c4,#fff176);border-color:var(--gold);box-shadow:0 0 6px rgba(255,215,0,.6);}
+
+/* Legend */
+.legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:5px;padding:0 4px;}
+.leg{display:flex;align-items:center;gap:3px;font-size:.58rem;color:var(--textsub);}
+.lb{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* Message */
+.msgbar{
+  margin:0 10px 6px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  padding:9px 14px;font-size:.76rem;color:rgba(255,255,255,.75);
+  text-align:center;line-height:1.5;backdrop-filter:blur(10px);
+}
+.thinking{display:none;justify-content:center;align-items:center;gap:6px;padding:6px;font-size:.73rem;color:#ffb74d;}
+.thinking.show{display:flex;}
+.dots span{animation:dot 1.2s infinite;opacity:0;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+
+/* Sheet triggers */
+.sheet-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 10px 6px;}
+.sh-btn{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:8px;font-size:.73rem;font-weight:600;
+  color:var(--textsub);cursor:pointer;font-family:'Poppins',sans-serif;
+  transition:all .2s;
+}
+.sh-btn:active{background:rgba(255,255,255,.1);}
+
+/* ── BOTTOM PANEL ── */
+.bottom{
+  position:sticky;bottom:0;
+  background:rgba(13,2,33,.95);
+  border-top:1.5px solid rgba(255,255,255,.1);
+  padding:10px 12px 14px;
+  backdrop-filter:blur(20px);
+  z-index:50;
+}
+
+/* Word preview */
+.preview{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.05);border:1.5px dashed rgba(255,215,0,.3);
+  border-radius:12px;padding:8px 14px;margin-bottom:10px;
+}
+.prev-left .pl{font-size:.6rem;color:var(--textsub);text-transform:uppercase;letter-spacing:.08em;}
+.prev-left .ph{font-size:.7rem;color:var(--orange);font-weight:600;margin-top:1px;}
+.prev-word{font-size:1.6rem;font-weight:900;color:var(--gold);letter-spacing:.12em;min-width:60px;text-align:right;}
+
+/* Rack */
+.rack{display:flex;gap:6px;justify-content:center;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;}
+.rack::-webkit-scrollbar{display:none;}
+.tile{
+  min-width:44px;width:44px;height:50px;flex-shrink:0;
+  background:linear-gradient(145deg,#fff8e1,#ffe082);
+  border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;border:2px solid #ffd54f;
+  box-shadow:2px 4px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7);
+  position:relative;transition:all .15s;user-select:none;
+}
+.tile:active{transform:scale(.93);}
+.tile.sel{
+  transform:translateY(-12px);
+  border-color:var(--orange);
+  box-shadow:0 10px 24px rgba(255,107,53,.5),inset 0 1px 0 rgba(255,255,255,.7);
+  background:linear-gradient(145deg,#fff9c4,#ffe57f);
+}
+.tile.used{opacity:.2;pointer-events:none;}
+.tile .tl2{font-size:1.25rem;font-weight:800;color:#1a1000;line-height:1;}
+.tile .tv{font-size:.5rem;font-weight:700;color:#6d4c00;position:absolute;bottom:3px;right:5px;}
+
+/* Buttons */
+.btn-submit{
+  width:100%;background:linear-gradient(135deg,#00e676,#00c853);
+  color:#001a00;border:none;border-radius:14px;padding:15px;
+  font-size:1.05rem;font-weight:800;cursor:pointer;font-family:'Poppins',sans-serif;
+  box-shadow:0 4px 20px rgba(0,230,118,.35);letter-spacing:.02em;
+  transition:all .2s;margin-bottom:8px;
+}
+.btn-submit:active{transform:scale(.98);box-shadow:0 2px 10px rgba(0,230,118,.2);}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.btn{
+  border:none;border-radius:11px;padding:11px 8px;
+  font-size:.78rem;font-weight:700;cursor:pointer;
+  font-family:'Poppins',sans-serif;transition:all .15s;
+}
+.btn:active{transform:scale(.96);}
+.b-clear{background:rgba(255,64,129,.12);color:#ff80ab;border:1px solid rgba(255,64,129,.25);}
+.b-shuf{background:rgba(124,77,255,.12);color:#b39ddb;border:1px solid rgba(124,77,255,.25);}
+.b-exch{background:rgba(0,188,212,.12);color:#80deea;border:1px solid rgba(0,188,212,.25);}
+.b-pass{background:rgba(255,152,0,.1);color:#ffcc80;border:1px solid rgba(255,152,0,.2);}
+.b-menu{background:rgba(255,255,255,.05);color:var(--textsub);border:1px solid rgba(255,255,255,.1);grid-column:1/-1;padding:9px;}
+
+/* ── SHEETS ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;backdrop-filter:blur(4px);}
+.overlay.show{display:flex;}
+.sheet{
+  background:linear-gradient(180deg,#1a0533,#0d0221);
+  border-radius:22px 22px 0 0;padding:20px 16px 30px;
+  width:100%;max-height:72vh;overflow-y:auto;
+  border-top:1.5px solid rgba(255,255,255,.1);
+}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sheet-title{font-size:1rem;font-weight:800;color:var(--gold);}
+.sheet-close{background:rgba(255,255,255,.08);border:none;color:var(--textsub);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.we{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 12px;border-radius:10px;margin-bottom:5px;}
+.we.player{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.15);}
+.we.computer{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.15);}
+.we .ww{font-weight:700;font-size:.85rem;}
+.we.player .ww{color:#00e676;}
+.we.computer .ww{color:var(--orange);}
+.we .wtag2{font-size:.6rem;padding:1px 7px;border-radius:10px;margin-top:2px;display:inline-block;}
+.we.player .wtag2{background:rgba(0,230,118,.15);color:#00e676;}
+.we.computer .wtag2{background:rgba(255,107,53,.15);color:var(--orange);}
+.we .wm{font-size:.67rem;color:var(--textsub);margin-top:2px;}
+.we .wpts{font-weight:800;color:var(--gold);font-size:.9rem;}
+.dict-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
+.dict-item .dw2{font-weight:700;font-size:.82rem;}
+.dict-item .dcat{font-size:.6rem;padding:1px 7px;border-radius:10px;display:inline-block;margin-left:6px;vertical-align:middle;}
+.dict-item .dw2.naija-w{color:#00e676;} .dict-item .dcat.naija-c{background:rgba(0,230,118,.15);color:#00e676;}
+.dict-item .dw2.eng-w{color:#00bcd4;} .dict-item .dcat.eng-c{background:rgba(0,188,212,.15);color:#00bcd4;}
+.dict-item .dm{font-size:.7rem;color:var(--textsub);margin-top:3px;}
+.dict-search{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;font-size:.82rem;color:var(--text);font-family:'Poppins',sans-serif;margin-bottom:10px;outline:none;}
+.dict-search::placeholder{color:var(--textsub);}
+.filter-row{display:flex;gap:6px;margin-bottom:10px;}
+.filter-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 12px;font-size:.68rem;font-weight:600;color:var(--textsub);cursor:pointer;font-family:'Poppins',sans-serif;}
+.filter-btn.active-f{background:rgba(0,230,118,.15);border-color:rgba(0,230,118,.4);color:#00e676;}
+.filter-btn.active-e{background:rgba(0,188,212,.15);border-color:rgba(0,188,212,.4);color:#00bcd4;}
+
+/* ── GAME OVER ── */
+#gameover{
+  align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(160deg,#0d0221,#1a0533,#0a1628);
+}
+.go-box{
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,215,0,.3);
+  border-radius:24px;padding:36px 24px;text-align:center;width:100%;max-width:380px;
+  backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.go-trophy{font-size:5rem;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(255,215,0,.5));}
+.go-title{font-size:2rem;font-weight:900;
+  background:linear-gradient(135deg,#FFD700,#ff6b35);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.go-scores{display:flex;gap:14px;justify-content:center;margin:18px 0;}
+.go-sc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 22px;}
+.go-sc .gsn{font-size:.75rem;color:var(--textsub);}
+.go-sc .gsv{font-size:2rem;font-weight:900;color:var(--gold);}
+.go-msg{font-size:.88rem;color:rgba(255,255,255,.65);margin-bottom:24px;line-height:1.65;}
+
+/* ── ANIMATIONS ── */
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes dot{0%,100%{opacity:0;}50%{opacity:1;}}
+@keyframes pop{0%{transform:scale(.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ WELCOME ═══════════ -->
+<div id="welcome" class="screen active">
+<div class="w-content">
+  <div class="flag-glow">🇳🇬</div>
+  <div class="game-title">Naija Scrabble</div>
+  <div class="game-sub">English × Nigerian Word Game</div>
+  <div class="tagline">"If you sabi words, you go win!" 😂</div>
+  <div class="diff-label">Choose Your Level</div>
+  <div class="diff-row">
+    <div class="dc sel" onclick="selDiff('easy',this)"><div class="di">😊</div><div class="dn">Easy</div><div class="dd">Chill vibes</div></div>
+    <div class="dc" onclick="selDiff('medium',this)"><div class="di">😤</div><div class="dn">Medium</div><div class="dd">Fair fight</div></div>
+    <div class="dc" onclick="selDiff('hard',this)"><div class="di">🔥</div><div class="dn">Hard</div><div class="dd">You go sweat</div></div>
+  </div>
+  <button class="start-btn" onclick="startGame()">Start Game 🎮</button>
+  <div class="wtags" style="margin-top:20px;">
+    <span class="wtag naija">omo</span><span class="wtag naija">abeg</span>
+    <span class="wtag english">play</span><span class="wtag naija">wahala</span>
+    <span class="wtag english">game</span><span class="wtag naija">sapa</span>
+    <span class="wtag english">word</span><span class="wtag naija">oshey</span>
+    <span class="wtag english">fun</span><span class="wtag naija">zazu</span>
+    <span class="wtag english">love</span><span class="wtag naija">jara</span>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:14px;font-size:.68rem;color:var(--textsub);">
+    <span style="color:#00e676;">🟢 Naija words</span>
+    <span style="color:#00bcd4;">🔵 English words</span>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ GAME ═══════════ -->
+<div id="game" class="screen">
+  <div class="topbar">
+    <div class="tb-logo">🇳🇬 Naija Scrabble</div>
+    <div class="scores">
+      <div class="sbox active" id="psbox"><div class="sl">You</div><div class="sv" id="pscore">0</div></div>
+      <div class="sbox" id="csbox"><div class="sl">CPU</div><div class="sv" id="cscore">0</div></div>
+    </div>
+    <div class="bagpill">🎒 <b id="bagcount">86</b></div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+    <div class="legend">
+      <div class="leg"><div class="lb" style="background:#e53935;"></div>TW</div>
+      <div class="leg"><div class="lb" style="background:#f06292;"></div>DW</div>
+      <div class="leg"><div class="lb" style="background:#1e88e5;"></div>TL</div>
+      <div class="leg"><div class="lb" style="background:#00bcd4;"></div>DL</div>
+    </div>
+  </div>
+
+  <div class="msgbar" id="msgbar">Oya! Tap a tile 👆 then tap the ★ center cell to start! 🇳🇬</div>
+  <div class="thinking" id="thinking"><span>🤔 CPU dey think</span><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+
+  <div class="sheet-btns">
+    <button class="sh-btn" onclick="openSheet('history')">📜 Word History</button>
+    <button class="sh-btn" onclick="openSheet('dict')">📖 Dictionary</button>
+  </div>
+
+  <!-- BOTTOM PANEL -->
+  <div class="bottom">
+    <div class="preview">
+      <div class="prev-left">
+        <div class="pl">Word Forming</div>
+        <div class="ph" id="prev-hint">tap a tile to start</div>
+      </div>
+      <div class="prev-word" id="prev-word">—</div>
+    </div>
+    <div class="rack" id="rack"></div>
+    <button class="btn-submit" onclick="playWord()">✅ SUBMIT WORD</button>
+    <div class="btn-grid">
+      <button class="btn b-clear" onclick="clearPlaced()">✕ Clear</button>
+      <button class="btn b-shuf" onclick="shuffleRack()">🔀 Shuffle</button>
+      <button class="btn b-exch" onclick="exchangeTiles()">🔄 Exchange</button>
+      <button class="btn b-pass" onclick="passTurn()">⏭ Pass</button>
+      <button class="btn b-menu" onclick="goHome()">🏠 Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SHEET OVERLAY ═══════════ -->
+<div class="overlay" id="overlay" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title" id="sheet-title"></div>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════ GAME OVER ═══════════ -->
+<div id="gameover" class="screen">
+  <div class="go-box">
+    <div class="go-trophy" id="go-trophy">🏆</div>
+    <div class="go-title" id="go-title"></div>
+    <div class="go-scores">
+      <div class="go-sc"><div class="gsn">You</div><div class="gsv" id="go-p">0</div></div>
+      <div class="go-sc"><div class="gsn">CPU</div><div class="gsv" id="go-c">0</div></div>
+    </div>
+    <div class="go-msg" id="go-msg"></div>
+    <button class="start-btn" onclick="resetGame()">Play Again 🎮</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// COMBINED DICTIONARY — English + Naija
+// ══════════════════════════════════════════
+const DICT = {
+  // ── ENGLISH (common scrabble words) ──
+  "aa":2,"ab":4,"ad":3,"ae":2,"ag":3,"ah":5,"ai":2,"al":2,"am":4,"an":2,"ar":2,"as":2,"at":2,"aw":5,"ax":9,"ay":5,"ba":4,"be":4,"bi":4,"bo":4,"by":7,"da":3,"de":3,"do":3,"ed":3,"ef":5,"eh":5,"el":2,"em":4,"en":2,"er":2,"es":2,"et":2,"ew":5,"ex":9,"fa":5,"fe":5,"gi":3,"go":3,"gu":3,"ha":5,"he":5,"hi":5,"hm":7,"ho":5,"id":3,"if":5,"in":2,"is":2,"it":2,"jo":9,"ka":6,"ki":6,"la":2,"li":2,"lo":2,"ma":4,"me":4,"mi":4,"mm":6,"mo":4,"mu":4,"my":7,"na":2,"ne":2,"no":2,"nu":2,"ob":4,"od":3,"oe":2,"of":5,"oh":5,"oi":2,"ok":6,"om":4,"on":2,"op":4,"or":2,"os":2,"ow":5,"ox":9,"oy":5,"pa":4,"pe":4,"pi":4,"po":4,"qi":11,"re":2,"sh":5,"si":2,"so":2,"ta":2,"ti":2,"to":2,"uh":5,"um":4,"un":2,"up":4,"ur":2,"us":2,"ut":2,"we":5,"wo":5,"xi":9,"xu":9,"ya":5,"ye":5,"yo":5,"za":11,
+  "ace":5,"act":5,"add":4,"age":4,"ago":4,"aid":4,"aim":5,"air":3,"ale":3,"all":3,"alt":3,"ape":5,"apt":5,"arc":5,"are":3,"ark":7,"arm":5,"art":3,"ash":6,"ask":7,"awe":6,"axe":10,
+  "bad":6,"bag":6,"ban":5,"bar":5,"bat":5,"bay":8,"bed":6,"bet":5,"bid":6,"big":6,"bit":5,"bog":6,"bow":8,"box":12,"boy":8,"bud":6,"bug":6,"bun":5,"bus":5,"but":5,"buy":8,
+  "cab":7,"can":5,"cap":7,"car":5,"cat":5,"cob":7,"cod":6,"cog":6,"cop":7,"cot":5,"cow":8,"cry":8,"cub":7,"cup":7,"cut":5,
+  "dab":6,"dad":4,"dam":6,"day":7,"den":4,"dew":7,"did":4,"dig":5,"dim":6,"dip":6,"dog":5,"dot":4,"dry":7,"dug":5,"dun":4,"duo":4,"dye":7,
+  "ear":3,"eat":3,"eel":3,"egg":5,"ego":4,"elf":6,"elm":5,"end":4,"era":3,"eve":6,
+  "fad":7,"fan":6,"far":6,"fat":6,"fax":13,"fed":7,"few":9,"fig":7,"fin":6,"fit":6,"fix":13,"fly":9,"foe":6,"fog":7,"for":6,"fox":13,"fry":9,"fun":6,"fur":6,
+  "gag":5,"gap":6,"gas":4,"gel":4,"gem":7,"get":4,"gig":5,"gin":4,"god":5,"got":4,"gum":7,"gun":4,"gut":4,"guy":7,
+  "had":7,"ham":8,"has":6,"hat":6,"hay":9,"hen":6,"her":6,"hid":7,"him":8,"hip":8,"his":6,"hit":6,"hog":7,"hop":8,"hot":6,"how":9,"hub":8,"hug":7,"hum":8,"hut":6,
+  "ice":5,"icy":8,"ill":3,"imp":7,"ink":7,"inn":3,"ion":3,"ire":3,"irk":7,"ivy":9,
+  "jab":12,"jag":11,"jam":12,"jar":10,"jaw":13,"jay":13,"jet":10,"job":12,"jog":11,"jot":10,"joy":13,"jug":11,"jut":10,
+  "keg":8,"key":10,"kid":8,"kin":7,"kit":7,
+  "lab":5,"lad":4,"lag":4,"lap":5,"law":6,"lax":9,"lay":6,"leg":4,"let":3,"lid":4,"lip":5,"lit":3,"log":4,"lot":3,"low":6,"lug":4,
+  "mad":6,"man":5,"map":7,"mar":5,"mat":5,"max":12,"may":8,"mob":7,"mod":6,"mom":7,"mop":7,"mud":6,"mug":7,"mum":7,
+  "nab":5,"nag":4,"nap":5,"nod":4,"nor":3,"not":3,"now":6,"nun":3,"nut":3,
+  "oaf":6,"oak":7,"oar":3,"odd":4,"ode":4,"oil":3,"old":4,"orb":5,"ore":3,"our":3,"out":3,"owe":6,"own":6,
+  "pad":6,"pal":5,"pan":5,"pap":7,"par":5,"pat":5,"paw":8,"pay":8,"peg":6,"pen":5,"pep":7,"pet":5,"pie":5,"pig":6,"pin":5,"pit":5,"ply":8,"pod":6,"pop":7,"pot":5,"pow":8,"pox":12,"pro":5,"pub":7,"pun":5,"pup":7,"pus":5,"put":5,
+  "rag":4,"ram":5,"ran":3,"rap":5,"rat":3,"raw":6,"ray":6,"red":4,"ref":6,"rep":5,"rid":4,"rig":4,"rip":5,"rob":5,"rod":4,"rot":3,"row":6,"rub":5,"rug":4,"rum":5,"run":3,"rut":3,
+  "sac":5,"sad":4,"sag":4,"sap":5,"sat":3,"saw":6,"say":6,"sea":3,"set":3,"sew":6,"shy":9,"sip":5,"sir":3,"sit":3,"ski":7,"sky":10,"sly":6,"sob":5,"sod":4,"son":3,"sop":5,"sot":3,"sow":6,"soy":6,"spa":5,"spy":8,"sty":6,"sub":5,"sue":3,"sum":5,"sun":3,"sup":5,
+  "tab":5,"tan":3,"tap":5,"tar":3,"tax":10,"tea":3,"ten":3,"the":6,"thy":9,"tic":5,"tie":3,"tin":3,"tip":5,"toe":3,"ton":3,"too":3,"top":5,"toy":6,"try":6,"tub":5,"tug":4,"tun":3,"two":6,
+  "urn":3,"use":3,
+  "van":6,"vat":6,"vet":6,"vow":9,"vug":7,
+  "wad":7,"war":6,"was":6,"wax":13,"web":8,"wed":7,"wig":7,"win":6,"wit":6,"woe":6,"wok":10,"won":6,"woo":6,"wow":9,
+  "yak":10,"yam":8,"yap":8,"yaw":9,"yep":8,"yet":6,"yew":9,"yin":6,"yip":8,"you":6,"yow":9,
+  "zap":14,"zed":13,"zen":12,"zig":13,"zip":14,"zit":12,"zoo":12,
+  // 4-letter english
+  "able":6,"acid":7,"aged":6,"also":4,"area":4,"army":7,"away":10,"baby":9,"back":12,"ball":6,"band":7,"bank":10,"base":6,"bath":9,"bear":6,"beat":6,"been":6,"bell":6,"best":6,"bird":7,"blow":9,"blue":6,"boat":6,"body":10,"bold":7,"bolt":6,"bond":7,"bone":6,"book":10,"boom":8,"born":6,"both":9,"bulk":10,"bull":6,"burn":6,"bush":9,"busy":9,"call":6,"calm":8,"came":8,"card":7,"care":6,"cart":6,"case":6,"cash":9,"cast":6,"cave":9,"cell":6,"chat":9,"chip":11,"chop":11,"city":9,"clap":8,"clay":9,"clip":8,"club":8,"clue":6,"coat":6,"code":7,"cold":7,"come":8,"cook":10,"cool":6,"cord":7,"core":6,"cost":6,"cram":8,"crop":8,"crow":9,
+  "dark":8,"data":5,"date":5,"dawn":8,"dead":5,"deal":5,"dear":5,"debt":7,"deed":5,"deep":7,"deny":8,"desk":8,"diet":5,"dirt":5,"dish":8,"disk":9,"does":5,"done":5,"door":5,"dose":5,"down":8,"draw":8,"drip":8,"drop":8,"drug":7,"drum":8,"dual":5,"dumb":9,"dump":9,"dusk":9,"dust":5,"each":9,"earn":4,"ease":4,"east":4,"easy":7,"edge":6,"emit":6,"emit":6,"even":7,"ever":7,"evil":7,"exam":12,"exit":11,"face":9,"fact":9,"fail":7,"fair":7,"fall":7,"fame":9,"farm":9,"fast":7,"fate":7,"fear":7,"feat":7,"feed":8,"feel":7,"feet":7,"fell":7,"felt":7,"file":7,"fill":7,"film":9,"find":8,"fire":7,"firm":9,"fish":10,"fist":7,"flag":8,"flat":7,"flaw":10,"fled":8,"flew":10,"flip":9,"flit":7,"flow":10,"foam":9,"fold":8,"folk":11,"fond":8,"food":8,"fool":7,"foot":7,"ford":8,"fore":7,"fork":11,"form":9,"fort":7,"foul":7,"four":7,"free":7,"from":9,"fuel":7,
+  "gain":5,"game":7,"gave":8,"gaze":13,"gear":5,"germ":7,"gift":8,"give":8,"glad":6,"glow":8,"glue":5,"goal":5,"goes":5,"gold":6,"golf":8,"gone":5,"good":6,"grab":7,"gram":7,"gray":8,"grew":8,"grid":6,"grin":5,"grip":7,"grow":8,"gulf":8,"guru":5,
+  "hack":13,"hair":7,"half":12,"hall":7,"halt":7,"hand":8,"hang":8,"hard":8,"harm":9,"hate":7,"have":10,"head":8,"heal":7,"heap":9,"hear":7,"heat":7,"heel":7,"held":8,"help":9,"herb":9,"here":7,"hero":7,"hide":8,"high":11,"hill":7,"hint":7,"hire":7,"hold":8,"hole":7,"holy":10,"home":9,"hood":8,"hook":11,"hope":9,"horn":7,"hose":7,"host":7,"hour":7,"huge":8,"hung":8,"hunt":7,"hurt":7,
+  "idea":5,"idle":5,"inch":9,"info":7,"into":4,"iron":4,"item":6,
+  "jack":15,"jade":12,"jail":11,"jake":15,"jerk":15,"join":11,"joke":15,"jolt":11,"jump":16,"just":11,
+  "keen":8,"keep":10,"kick":14,"kill":8,"kind":9,"king":9,"knee":9,"knew":10,"knit":9,"knob":11,"know":10,
+  "lack":10,"laid":5,"lake":8,"lamp":9,"land":5,"lane":4,"last":4,"late":4,"lead":5,"leaf":7,"lean":4,"leap":6,"left":7,"lend":5,"lent":4,"less":4,"lick":10,"life":7,"lift":7,"like":8,"lime":6,"line":4,"link":8,"lion":4,"list":4,"live":7,"load":5,"loan":4,"lock":10,"loft":7,"lone":4,"long":5,"look":8,"loom":6,"loop":6,"lore":4,"lose":4,"loss":4,"lost":4,"loud":5,"love":7,"luck":10,"lure":4,"lust":4,
+  "made":7,"mail":6,"main":6,"make":10,"male":6,"mall":6,"mane":6,"mark":10,"mask":10,"mass":6,"mate":6,"maze":15,"meal":6,"mean":6,"meat":6,"meet":6,"melt":6,"memo":8,"menu":6,"mere":6,"mesh":9,"mess":6,"mild":7,"mile":6,"milk":10,"mill":6,"mind":7,"mine":6,"mint":6,"miss":6,"mist":6,"mode":7,"most":6,"move":9,"much":11,"mule":6,"must":6,
+  "nail":4,"name":6,"near":4,"neat":4,"neck":10,"need":5,"nest":4,"next":11,"nice":6,"nine":4,"node":5,"none":4,"noon":4,"norm":6,"nose":4,"note":4,"noun":4,
+  "obey":9,"once":6,"only":7,"open":6,"oral":4,"over":7,"oven":7,
+  "pace":8,"pack":12,"page":7,"paid":7,"pain":6,"pair":6,"pale":6,"palm":8,"pant":6,"part":6,"pass":6,"past":6,"path":9,"peak":10,"peel":6,"peer":6,"pick":12,"pile":6,"pill":6,"pine":6,"pink":10,"pipe":8,"plan":6,"play":9,"plot":6,"plow":9,"plug":7,"plus":6,"poem":8,"poet":6,"pole":6,"poll":6,"pond":7,"pony":9,"pool":6,"poor":6,"pork":10,"pose":6,"post":6,"pour":6,"pray":9,"prey":9,"pull":6,"pump":10,"pure":6,"push":9,
+  "race":6,"rack":8,"rage":5,"rail":4,"rain":4,"rake":8,"rang":5,"rank":8,"rare":4,"rash":7,"rate":4,"read":5,"real":4,"ream":6,"reap":6,"rear":4,"reef":7,"reel":4,"rely":7,"rent":4,"rest":4,"rice":6,"rich":9,"ride":5,"ring":5,"riot":4,"rise":4,"risk":8,"roar":4,"rock":8,"role":4,"roll":4,"roof":7,"room":6,"root":4,"rope":6,"rose":4,"rude":5,"ruin":4,"rule":4,"rush":7,"rust":4,
+  "safe":7,"sage":5,"sail":4,"sale":4,"salt":4,"same":6,"sand":5,"sane":4,"sang":5,"sank":8,"save":7,"scan":6,"scar":6,"seal":4,"seam":6,"seat":4,"seed":5,"seek":8,"seem":6,"seen":4,"self":7,"sell":4,"send":5,"sent":4,"shed":8,"ship":9,"shop":9,"shot":7,"show":10,"shut":7,"sick":10,"side":5,"sigh":8,"sign":5,"silk":8,"sing":5,"sink":8,"size":13,"skin":8,"skip":10,"slam":8,"slap":8,"slim":8,"slip":8,"slot":6,"slow":7,"slug":5,"snap":8,"snow":7,"sock":10,"soft":7,"soil":4,"sold":5,"sole":4,"solo":4,"song":5,"soon":4,"sort":4,"soul":4,"soup":6,"sour":4,"span":6,"spin":6,"spot":6,"stem":8,"step":6,"stir":4,"stop":6,"stub":6,"suck":10,"suit":4,"sulk":8,"sung":5,"sunk":8,"sure":4,"swan":7,"swap":9,"swat":7,"swim":9,"swing":8,
+  "tale":4,"tall":4,"tame":6,"tank":8,"tape":6,"task":8,"team":6,"tear":4,"tell":4,"tend":5,"tent":4,"term":6,"test":4,"text":11,"than":7,"that":7,"them":9,"then":7,"they":10,"thin":7,"this":7,"thus":7,"tick":10,"tide":5,"tidy":8,"tier":4,"till":4,"time":6,"tiny":7,"tire":4,"told":5,"toll":4,"tomb":8,"tone":4,"tool":4,"torn":4,"toss":4,"tour":4,"town":7,"trap":6,"trek":8,"trim":6,"trip":6,"trod":5,"true":4,"tube":6,"tune":4,"turf":7,"turn":4,"twin":7,"type":9,
+  "ugly":8,"unit":4,"upon":6,"used":5,"user":4,
+  "vale":7,"vary":10,"vast":7,"veil":7,"vein":7,"very":10,"vice":9,"view":10,"vine":7,"visa":7,"void":8,"vote":7,
+  "wade":8,"wage":8,"wait":7,"wake":11,"walk":11,"wall":7,"wand":8,"want":7,"ward":8,"warm":9,"warn":7,"wart":7,"wash":10,"wave":10,"weak":11,"weal":7,"wean":7,"wear":7,"weed":8,"week":11,"weld":8,"well":7,"went":7,"were":7,"west":7,"what":10,"when":10,"whip":12,"wide":8,"wife":10,"wild":8,"will":7,"wind":8,"wine":7,"wing":8,"wire":7,"wise":7,"wish":10,"with":10,"woke":11,"wolf":10,"womb":11,"wood":8,"wool":7,"word":8,"wore":7,"work":11,"worm":9,"worn":7,"wrap":9,
+  "yard":8,"year":7,"yell":7,"your":7,
+  "zeal":13,"zero":13,"zest":13,"zinc":15,"zone":13,
+  // ── NAIJA WORDS ──
+  "omo":6,"abi":6,"ode":6,"oga":4,"oya":6,"kai":7,"obi":6,"ada":4,"chi":8,"ebo":6,"ife":6,"ole":5,"olu":4,"ori":4,"oro":4,"osa":4,"ose":5,"owo":6,"oye":8,"nne":5,"bam":7,"sho":6,"ago":4,
+  "abeg":9,"ewoo":10,"kolo":8,"sapa":8,"jara":9,"gele":7,"zona":13,"maga":8,"waka":11,"biko":10,"nawa":8,"chai":9,"ehen":7,"oshe":7,"sabi":8,"rara":5,"jobo":13,"baba":8,"mama":8,"juju":17,"boro":7,"sege":8,"gidi":8,"beke":11,"keke":11,"pako":10,"ojor":9,"nkem":12,"obim":10,"dele":6,
+  "wahala":12,"agbero":11,"oshey":10,"aburo":8,"agidi":9,"alaye":9,"amebo":10,"asake":10,"asiri":8,"broda":9,"choke":14,"coded":9,"comot":10,"craze":14,"denge":8,"egusi":7,"ekiti":9,"enugu":7,"gbege":10,"gbosa":10,"hustle":10,"ikebe":13,"jaiye":16,"kanda":10,"kasala":10,"lamba":10,"lekki":12,"mopol":10,"mumu":10,"naira":6,"obodo":10,"ogbon":10,"okada":10,"olori":7,"omoge":10,"oponu":10,"oyibo":13,"pepper":12,"sharp":11,"shayo":11,"sofri":9,"tuale":8,"yanga":9,"zazu":22,"flash":11,"forte":9,"ijele":10,"zona":13,"eyan":8,
+};
+
+// Word categories
+const NAIJA_SET = new Set(["omo","abi","ode","oga","oya","kai","obi","ada","chi","ebo","ife","ole","olu","ori","oro","osa","ose","owo","oye","nne","bam","sho","ago","abeg","ewoo","kolo","sapa","jara","gele","zona","maga","waka","biko","nawa","chai","ehen","oshe","sabi","rara","jobo","baba","mama","juju","boro","sege","gidi","beke","keke","pako","ojor","nkem","obim","dele","wahala","agbero","oshey","aburo","agidi","alaye","amebo","asake","asiri","broda","choke","coded","comot","craze","denge","egusi","ekiti","enugu","gbege","gbosa","hustle","ikebe","jaiye","kanda","kasala","lamba","lekki","mopol","mumu","naira","obodo","ogbon","okada","olori","omoge","oponu","oyibo","pepper","sharp","shayo","sofri","tuale","yanga","zazu","flash","forte","ijele","eyan"]);
+
+const MEANINGS = {
+  "omo":"Yoruba exclamation of surprise or admiration","abeg":"Pidgin for 'please' or 'I beg you'",
+  "ewoo":"Yoruba exclamation of shock or disbelief","ode":"Yoruba for a foolish person",
+  "kolo":"Slang for acting crazy or strange","sapa":"Being extremely broke",
+  "wahala":"Pidgin for trouble or problem","agbero":"A tout or area boy",
+  "oshey":"Slang for 'well done' or approval","jara":"Free extra on top of purchase",
+  "gele":"Traditional Yoruba headwrap","zona":"Stylish well-dressed person",
+  "maga":"Someone who has been scammed","waka":"To walk around or leave",
+  "biko":"Igbo word for 'please'","nawa":"Expression of disbelief or amazement",
+  "chai":"Exclamation of pain, shock, or sadness","sabi":"To know or understand something",
+  "mumu":"Foolish or gullible person","hustle":"To work hard and grind for money",
+  "juju":"Traditional African magic or charm","yanga":"Showing off or forming big",
+  "zazu":"Street slang for being extremely stylish","lamba":"Forming or pretending",
+  "oyibo":"Yoruba for white person or foreigner","okada":"Commercial motorcycle transport",
+  "oga":"Boss or person in charge","abi":"Right? or seeking agreement",
+  "kai":"Exclamation of regret, pain or surprise","gbege":"Big trouble or chaos",
+  "gbosa":"A loud bang or slap","jaiye":"To enjoy life to the fullest",
+  "kasala":"Serious trouble or commotion","amebo":"A gossip or nosy person",
+  "sharp":"Smart, fast or clever","omoge":"A beautiful girl",
+  "lekki":"Upscale area in Lagos","naira":"Nigerian currency",
+  "pepper":"To suffer or face hardship","egusi":"Nigerian melon seed for soup",
+};
+
+// ── TILE DATA ──
+const VALS={A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,N:1,O:1,P:3,R:1,S:1,T:1,U:1,W:4,Y:4,Z:10,'*':0};
+const DIST={A:9,B:2,C:2,D:4,E:12,F:2,G:3,H:2,I:9,J:1,K:1,L:4,M:2,N:6,O:8,P:2,R:6,S:4,T:6,U:4,W:2,Y:2,Z:1,'*':2};
+
+// ── BOARD SPECIALS ──
+const SP={};
+[[0,0],[0,7],[0,14],[7,0],[7,14],[14,0],[14,7],[14,14]].forEach(([r,c])=>SP[`${r},${c}`]='tw');
+[[1,1],[2,2],[3,3],[4,4],[1,13],[2,12],[3,11],[4,10],[10,4],[11,3],[12,2],[13,1],[10,10],[11,11],[12,12],[13,13],[7,7]].forEach(([r,c])=>SP[`${r},${c}`]='dw');
+[[1,5],[1,9],[5,1],[5,5],[5,9],[5,13],[9,1],[9,5],[9,9],[9,13],[13,5],[13,9]].forEach(([r,c])=>SP[`${r},${c}`]='tl');
+[[0,3],[0,11],[2,6],[2,8],[3,0],[3,7],[3,14],[6,2],[6,6],[6,8],[6,12],[7,3],[7,11],[8,2],[8,6],[8,8],[8,12],[11,0],[11,7],[11,14],[12,6],[12,8],[14,3],[14,11]].forEach(([r,c])=>SP[`${r},${c}`]='dl');
+
+// ── STATE ──
+let G={board:null,rack:[],cpuRack:[],bag:[],pScore:0,cScore:0,turn:'player',diff:'easy',placed:[],selTile:null,selIdx:null,passes:0,over:false,first:true,history:[]};
+
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const buildBag=()=>{const b=[];for(const[l,n]of Object.entries(DIST))for(let i=0;i<n;i++)b.push(l);return shuffle(b);};
+const draw=n=>{const d=[];for(let i=0;i<n&&G.bag.length;i++)d.push(G.bag.pop());return d;};
+
+function selDiff(d,el){G.diff=d;document.querySelectorAll('.dc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+
+function startGame(){
+  G.board=Array(15).fill(null).map(()=>Array(15).fill(null));
+  G.bag=buildBag();G.rack=draw(7);G.cpuRack=draw(7);
+  G.pScore=0;G.cScore=0;G.turn='player';G.placed=[];
+  G.selTile=null;G.selIdx=null;G.passes=0;G.over=false;G.first=true;G.history=[];
+  show('game');renderBoard();renderRack();updUI();
+  setMsg("Oya! Tap a tile 👆 then tap the ★ center cell to place your first word! 🇳🇬");
+}
+function resetGame(){show('welcome');}
+function goHome(){show('welcome');}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function renderBoard(){
+  const bd=document.getElementById('board');bd.innerHTML='';
+  for(let r=0;r<15;r++)for(let c=0;c<15;c++){
+    const el=document.createElement('div');el.className='cell';
+    const key=`${r},${c}`,sp=SP[key],isCenter=r===7&&c===7;
+    const pl=G.placed.find(p=>p.row===r&&p.col===c);
+    const ex=G.board[r][c];
+    if(pl){
+      el.classList.add('has-tile','placed');
+      el.innerHTML=`<div class="bt"><span class="bl">${pl.letter}</span><span class="bv">${VALS[pl.letter]||0}</span></div>`;
+      el.onclick=()=>recallTile(r,c);
+    } else if(ex){
+      el.classList.add('has-tile');
+      el.innerHTML=`<div class="bt"><span class="bl">${ex}</span><span class="bv">${VALS[ex]||0}</span></div>`;
+    } else {
+      if(isCenter){el.classList.add('star');el.textContent='★';}
+      else if(sp){el.classList.add(sp);el.textContent=sp.toUpperCase();}
+      else el.classList.add('empty');
+      if(G.selTile)el.classList.add('hi');
+      el.onclick=()=>placeOn(r,c);
+    }
+    bd.appendChild(el);
+  }
+}
+
+function renderRack(){
+  const r=document.getElementById('rack');r.innerHTML='';
+  G.rack.forEach((letter,i)=>{
+    const t=document.createElement('div');t.className='tile';
+    if(G.placed.some(p=>p.rackIdx===i))t.classList.add('used');
+    if(G.selIdx===i)t.classList.add('sel');
+    t.innerHTML=`<span class="tl2">${letter}</span><span class="tv">${VALS[letter]||0}</span>`;
+    t.onclick=()=>selTile(i,letter);
+    r.appendChild(t);
+  });
+}
+
+function selTile(idx,letter){
+  if(G.placed.some(p=>p.rackIdx===idx))return;
+  if(G.turn!=='player')return;
+  G.selTile=letter;G.selIdx=idx;
+  renderRack();renderBoard();
+  setMsg(`"${letter}" selected! Now tap any highlighted cell on the board 🎯`);
+}
+
+function placeOn(r,c){
+  if(!G.selTile){setMsg("👆 First tap a tile from YOUR TILES below, then tap the board!");return;}
+  if(G.board[r][c]||G.placed.some(p=>p.row===r&&p.col===c))return;
+  G.placed.push({row:r,col:c,letter:G.selTile,rackIdx:G.selIdx});
+  G.selTile=null;G.selIdx=null;
+  renderBoard();renderRack();updPreview();
+  setMsg(`Tile placed! Add more letters or tap ✅ SUBMIT WORD when ready!`);
+}
+
+function recallTile(r,c){
+  const i=G.placed.findIndex(p=>p.row===r&&p.col===c);
+  if(i===-1)return;
+  G.placed.splice(i,1);
+  renderBoard();renderRack();updPreview();
+  setMsg("Tile recalled. Reposition it wherever you like 🔄");
+}
+
+function clearPlaced(){
+  G.placed=[];G.selTile=null;G.selIdx=null;
+  renderBoard();renderRack();updPreview();
+  setMsg("All tiles cleared. Start fresh! 🔄");
+}
+
+function updPreview(){
+  const wEl=document.getElementById('prev-word');
+  const hEl=document.getElementById('prev-hint');
+  if(!G.placed.length){wEl.textContent='—';hEl.textContent='tap a tile to start';return;}
+  const sorted=[...G.placed].sort((a,b)=>a.row===b.row?a.col-b.col:a.row-b.row);
+  const w=sorted.map(p=>p.letter).join('');
+  wEl.textContent=w;
+  const inDict=DICT[w.toLowerCase()];
+  if(inDict){
+    const isNaija=NAIJA_SET.has(w.toLowerCase());
+    hEl.style.color=isNaija?'#00e676':'#00bcd4';
+    hEl.textContent=isNaija?'✅ Valid Naija word!':'✅ Valid English word!';
+  } else if(w.length>=2){
+    hEl.style.color='#ff8a80';hEl.textContent='keep adding letters...';
+  } else {
+    hEl.style.color='var(--textsub)';hEl.textContent='keep adding letters...';
+  }
+}
+
+function getWord(){
+  if(!G.placed.length)return null;
+  const rows=[...new Set(G.placed.map(p=>p.row))];
+  const cols=[...new Set(G.placed.map(p=>p.col))];
+  if(rows.length>1&&cols.length>1)return null;
+  const dir=rows.length>1?'v':'h';
+  const sorted=[...G.placed].sort((a,b)=>dir==='h'?a.col-b.col:a.row-b.row);
+  let word='';const cells=[];
+  if(dir==='h'){
+    const row=sorted[0].row,minC=sorted[0].col,maxC=sorted[sorted.length-1].col;
+    for(let c=minC;c<=maxC;c++){
+      const pl=G.placed.find(p=>p.row===row&&p.col===c);
+      const ex=G.board[row][c];
+      if(!pl&&!ex)return null;
+      cells.push({row,col:c,letter:pl?pl.letter:ex,isNew:!!pl});
+      word+=pl?pl.letter:ex;
+    }
+  } else {
+    const col=sorted[0].col,minR=sorted[0].row,maxR=sorted[sorted.length-1].row;
+    for(let r=minR;r<=maxR;r++){
+      const pl=G.placed.find(p=>p.row===r&&p.col===col);
+      const ex=G.board[r][col];
+      if(!pl&&!ex)return null;
+      cells.push({row:r,col,letter:pl?pl.letter:ex,isNew:!!pl});
+      word+=pl?pl.letter:ex;
+    }
+  }
+  return{word:word.toLowerCase(),cells};
+}
+
+function calcPts(cells){
+  let base=0,mult=1;
+  cells.forEach(({row,col,letter,isNew})=>{
+    const v=VALS[letter.toUpperCase()]||0,sp=SP[`${row},${col}`];
+    if(isNew){
+      base+=sp==='tl'?v*3:sp==='dl'?v*2:v;
+      if(sp==='tw')mult*=3;
+      else if(sp==='dw'||(row===7&&col===7))mult*=2;
+    } else base+=v;
+  });
+  return base*mult;
+}
+
+function isConnected(){
+  if(G.first)return G.placed.some(p=>p.row===7&&p.col===7);
+  return G.placed.some(p=>[[0,1],[0,-1],[1,0],[-1,0]].some(([dr,dc])=>{
+    const nr=p.row+dr,nc=p.col+dc;
+    if(nr<0||nr>14||nc<0||nc>14)return false;
+    return G.board[nr][nc]&&!G.placed.some(x=>x.row===nr&&x.col===nc);
+  }));
+}
+
+function playWord(){
+  if(G.turn!=='player'){setMsg("Wait for CPU to finish! 😅");return;}
+  if(!G.placed.length){setMsg("👆 Tap a tile first, then place it on the board!");return;}
+  const res=getWord();
+  if(!res){setMsg("❌ Tiles must be in one straight line with no gaps!");clearPlaced();return;}
+  const{word,cells}=res;
+  if(!DICT[word]){
+    const isNaija=NAIJA_SET.has(word);
+    setMsg(`❌ "${word.toUpperCase()}" not found! Try: OMO, ABEG, WAKA, GAME, PLAY, WORD, BOLD`);
+    clearPlaced();return;
+  }
+  if(!isConnected()&&!G.first){setMsg("❌ Your word must connect to tiles already on the board!");clearPlaced();return;}
+  if(G.first&&!G.placed.some(p=>p.row===7&&p.col===7)){setMsg("❌ First word must pass through the ★ center star!");clearPlaced();return;}
+
+  G.placed.forEach(p=>G.board[p.row][p.col]=p.letter.toUpperCase());
+  const pts=calcPts(cells)+(G.placed.length===7?50:0);
+  const bingo=G.placed.length===7?" 🔥 BINGO! +50 bonus!":"";
+  G.pScore+=pts;
+  const isNaija=NAIJA_SET.has(word);
+  const meaning=MEANINGS[word]?` — "${MEANINGS[word]}"` : '';
+  const label=isNaija?'🟢 Naija word':'🔵 English word';
+  G.history.unshift({word,pts,who:'player',isNaija});
+  G.first=false;
+  G.rack=G.rack.filter((_,i)=>!G.placed.some(p=>p.rackIdx===i));
+  G.rack=[...G.rack,...draw(7-G.rack.length)];
+  G.placed=[];G.passes=0;
+  updUI();updPreview();
+  setMsg(`🎉 "${word.toUpperCase()}" = ${pts} pts! ${label}${bingo}${meaning}`);
+  renderBoard();renderRack();
+  if(checkOver())return;
+  G.turn='cpu';updTurnUI();
+  setTimeout(cpuPlay,1800);
+}
+
+function cpuPlay(){
+  document.getElementById('thinking').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('thinking').classList.remove('show');
+    const move=findMove();
+    if(move){
+      move.cells.forEach(({row,col,letter})=>G.board[row][col]=letter.toUpperCase());
+      G.cScore+=move.score;
+      G.cpuRack=G.cpuRack.filter(l=>!move.used.includes(l));
+      G.cpuRack=[...G.cpuRack,...draw(7-G.cpuRack.length)];
+      G.history.unshift({word:move.word,pts:move.score,who:'computer',isNaija:NAIJA_SET.has(move.word)});
+      G.passes=0;G.first=false;updUI();
+      const naijaMsgs=[`Omo! CPU find "${move.word.toUpperCase()}" — ${move.score} pts! 🤖`,`See level! CPU drop "${move.word.toUpperCase()}" for ${move.score} pts 🔥`];
+      const engMsgs=[`CPU played "${move.word.toUpperCase()}" for ${move.score} points 😎`,`Computer found "${move.word.toUpperCase()}" — ${move.score} pts! 🧠`];
+      const msgs=NAIJA_SET.has(move.word)?naijaMsgs:engMsgs;
+      setMsg(msgs[Math.floor(Math.random()*msgs.length)]+" Your turn! 🇳🇬");
+    } else {G.passes++;setMsg("CPU pass! No word fit. Your turn 💪");}
+    renderBoard();
+    if(checkOver())return;
+    G.turn='player';updTurnUI();
+  },{easy:2000,medium:2500,hard:3000}[G.diff]||2000);
+}
+
+function findMove(){
+  const wlist=shuffle([...Object.keys(DICT)]);
+  const filt={easy:w=>w.length<=4,medium:w=>w.length<=6,hard:()=>true}[G.diff];
+  for(const word of wlist.filter(filt)){
+    const letters=word.toUpperCase().split('');
+    const avail=[...G.cpuRack];
+    if(letters.some(l=>{const i=avail.indexOf(l);if(i>-1){avail.splice(i,1);return false;}return true;}))continue;
+    const pl=findPlacement(word);
+    if(pl)return{...pl,word,used:word.toUpperCase().split('')};
+  }
+  return null;
+}
+
+function findPlacement(word){
+  const len=word.length;
+  for(let r=0;r<15;r++)for(let c=0;c<=15-len;c++){
+    const cells=[];let ok=true,hasNew=false,conn=G.first;
+    for(let i=0;i<len;i++){
+      const ex=G.board[r][c+i];
+      if(ex&&ex!==word[i].toUpperCase()){ok=false;break;}
+      if(!ex)hasNew=true; if(ex)conn=true;
+      cells.push({row:r,col:c+i,letter:word[i],isNew:!ex});
+    }
+    if(!ok||!hasNew)continue;
+    if(G.first&&!cells.some(x=>x.row===7&&x.col===7))continue;
+    if(!G.first&&!conn)continue;
+    return{cells,score:calcPts(cells)};
+  }
+  for(let c=0;c<15;c++)for(let r=0;r<=15-len;r++){
+    const cells=[];let ok=true,hasNew=false,conn=G.first;
+    for(let i=0;i<len;i++){
+      const ex=G.board[r+i][c];
+      if(ex&&ex!==word[i].toUpperCase()){ok=false;break;}
+      if(!ex)hasNew=true; if(ex)conn=true;
+      cells.push({row:r+i,col:c,letter:word[i],isNew:!ex});
+    }
+    if(!ok||!hasNew)continue;
+    if(G.first&&!cells.some(x=>x.row===7&&x.col===7))continue;
+    if(!G.first&&!conn)continue;
+    return{cells,score:calcPts(cells)};
+  }
+  return null;
+}
+
+function passTurn(){if(G.turn!=='player')return;clearPlaced();G.passes++;setMsg("You passed. CPU go now... 🤔");if(checkOver())return;G.turn='cpu';updTurnUI();setTimeout(cpuPlay,1500);}
+function exchangeTiles(){if(G.turn!=='player')return;if(G.bag.length<7){setMsg("Not enough tiles in bag! 🙏");return;}clearPlaced();G.bag=[...G.rack,...G.bag];shuffle(G.bag);G.rack=draw(7);renderRack();setMsg("Fresh tiles! CPU go now... 🎲");G.turn='cpu';updTurnUI();setTimeout(cpuPlay,1500);}
+function shuffleRack(){shuffle(G.rack);renderRack();}
+
+function checkOver(){
+  if(G.passes>=4||(G.bag.length===0&&(G.rack.length===0||G.cpuRack.length===0))){endGame();return true;}return false;
+}
+function endGame(){
+  G.over=true;
+  document.getElementById('go-p').textContent=G.pScore;
+  document.getElementById('go-c').textContent=G.cScore;
+  let t,ti,m;
+  if(G.pScore>G.cScore){t='🏆';ti='You Win! Oshey!';m=`You beat CPU by ${G.pScore-G.cScore} pts! You sabi English and Naija words die! 🎉🇳🇬`;}
+  else if(G.cScore>G.pScore){t='😅';ti='CPU Wins!';m=`CPU beat you by ${G.cScore-G.pScore} pts. Go practice more words! 😂`;}
+  else{t='🤝';ti='Na Draw!';m='Una tie! Both of you sabi words well well! 🇳🇬🤝';}
+  document.getElementById('go-trophy').textContent=t;
+  document.getElementById('go-title').textContent=ti;
+  document.getElementById('go-msg').textContent=m;
+  setTimeout(()=>show('gameover'),1200);
+}
+
+function updUI(){document.getElementById('pscore').textContent=G.pScore;document.getElementById('cscore').textContent=G.cScore;document.getElementById('bagcount').textContent=G.bag.length;}
+function updTurnUI(){document.getElementById('psbox').classList.toggle('active',G.turn==='player');document.getElementById('csbox').classList.toggle('active',G.turn==='cpu');}
+function setMsg(m){document.getElementById('msgbar').textContent=m;}
+
+// ── SHEETS ──
+let dictFilter='all';
+function openSheet(type){
+  const ov=document.getElementById('overlay');
+  const title=document.getElementById('sheet-title');
+  const body=document.getElementById('sheet-body');
+  if(type==='history'){
+    title.textContent='📜 Word History';
+    body.innerHTML=!G.history.length?'<p style="color:var(--textsub);text-align:center;padding:20px;">No words played yet! 🎮</p>':
+      G.history.map(h=>`<div class="we ${h.who}">
+        <div><div class="ww">${h.word.toUpperCase()}</div>
+        <span class="wtag2">${h.isNaija?'🟢 Naija':'🔵 English'}</span>
+        <div class="wm">${MEANINGS[h.word]||''}</div></div>
+        <div class="wpts">+${h.pts}</div></div>`).join('');
+  } else {
+    title.textContent='📖 Dictionary';
+    renderDict(body,'all');
+    const filterHTML=`<input class="dict-search" placeholder="🔍 Search words..." oninput="filterDict(this.value)" id="dsearch"/>
+      <div class="filter-row">
+        <button class="filter-btn active-f" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('naija',this)" style="color:#00e676;border-color:rgba(0,230,118,.2);">🟢 Naija</button>
+        <button class="filter-btn" onclick="setFilter('english',this)" style="color:#00bcd4;border-color:rgba(0,188,212,.2);">🔵 English</button>
+      </div><div id="dict-list"></div>`;
+    body.innerHTML=filterHTML;
+    renderDictList('all','');
+  }
+  ov.classList.add('show');
+}
+function renderDictList(filter,search){
+  const container=document.getElementById('dict-list');
+  if(!container)return;
+  const entries=Object.entries(MEANINGS).filter(([w])=>{
+    if(filter==='naija'&&!NAIJA_SET.has(w))return false;
+    if(filter==='english'&&NAIJA_SET.has(w))return false;
+    if(search&&!w.includes(search.toLowerCase()))return false;
+    return true;
+  });
+  container.innerHTML=entries.map(([w,m])=>{
+    const isN=NAIJA_SET.has(w);
+    return`<div class="dict-item">
+      <span class="dw2 ${isN?'naija-w':'eng-w'}">${w.toUpperCase()}</span>
+      <span class="dcat ${isN?'naija-c':'eng-c'}">${isN?'🟢 Naija':'🔵 English'}</span>
+      <div class="dm">${m}</div></div>`;
+  }).join('')||'<p style="color:var(--textsub);text-align:center;padding:16px;">No words found 🔍</p>';
+}
+function renderDict(el,f){dictFilter=f;}
+function setFilter(f,btn){
+  dictFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.remove('active-f','active-e');});
+  btn.classList.add(f==='naija'?'active-f':f==='english'?'active-e':'active-f');
+  const search=document.getElementById('dsearch');
+  renderDictList(f,search?search.value:'');
+}
+function filterDict(val){renderDictList(dictFilter,val);}
+function closeSheet(e){if(!e||e.target===document.getElementById('overlay'))document.getElementById('overlay').classList.remove('show');}
+</script>
+</body>
+</html>
